@@ -40,3 +40,16 @@ func TestToTimeBad(t *testing.T) {
 		t.Fatal("应该解析失败")
 	}
 }
+
+func TestParseDurationHelpers(t *testing.T) {
+	// -add / -ago 走的都是 time.ParseDuration，这里验证其覆盖常见写法
+	cases := map[string]bool{
+		"1h30m": true, "48h": true, "90s": true, "1h": true,
+	}
+	for d, wantOK := range cases {
+		_, err := time.ParseDuration(d)
+		if (err == nil) != wantOK {
+			t.Fatalf("ParseDuration(%s) 结果不符合预期", d)
+		}
+	}
+}
