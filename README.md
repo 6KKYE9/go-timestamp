@@ -4,3 +4,20 @@
   go-timestamp -now
   go-timestamp 1700000000
   go-timestamp 2023-11-14 22:13:20
+  go-timestamp -now -add 1h30m          # 当前时间加 1 小时 30 分
+  go-timestamp -ago 3h                  # 3 小时前是几点
+  go-timestamp -date 2023-11-14 22:13:20 -add 2d   # 指定基准时间再增减
+  go-timestamp -f 2006/01/02 1700000000            # 自定义输出格式
+  go-timestamp -u 1700000000            # 用 UTC 时区显示
+
+参数：
+  -now      打印当前时间戳（秒和毫秒）
+  -add 时长 在给定时间上加一段时长，如 1h30m、48h、90s
+  -ago 时长 输出当前时间往前推多少，如 3h、2d
+  -d        把两个参数当时间点，求它们之间的差
+  -date 时间 指定基准时间，-add/-ago 基于它而不是当前时间
+  -f 格式   自定义输出格式，如 -f 2006/01/02
+  -u        用 UTC 时区显示，而不是本地时区
+
+测试：
+  go test

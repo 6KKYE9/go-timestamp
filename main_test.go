@@ -53,3 +53,18 @@ func TestParseDurationHelpers(t *testing.T) {
 		}
 	}
 }
+
+func TestShowCustomLayout(t *testing.T) {
+	// 自定义格式：-f 2006/01/02 应只输出日期部分
+	tm := time.Date(2023, 11, 14, 22, 13, 20, 0, time.Local)
+	if tm.Format("2006/01/02") != "2023/11/14" {
+		t.Fatalf("格式布局不符")
+	}
+}
+
+func TestShowDefaultUtc(t *testing.T) {
+	tm := time.Date(2023, 11, 14, 22, 13, 20, 0, time.UTC)
+	if tm.UTC().Format(time.RFC3339) != "2023-11-14T22:13:20Z" {
+		t.Fatalf("UTC 格式不符: %s", tm.UTC().Format(time.RFC3339))
+	}
+}

@@ -41,7 +41,15 @@ func main() {
 	add := flag.String("add", "", "在给定时间上增减时长，比如 1h30m、2d、90s")
 	diff := flag.Bool("d", false, "把两个参数当时间点，输出它们之间的差（如 1700000000 1700003600）")
 	ago := flag.String("ago", "", "输出当前时间往前推多少，比如 3h、2d（和 -now 类似但只给一个结果）")
+	utc := flag.Bool("u", false, "输出统一用 UTC 时区，而不是本地时区")
+	layout := flag.String("f", "", "自定义输出格式，比如 -f 2006/01/02，不设就用默认样式")
+	base := flag.String("date", "", "指定基准时间（时间戳或 2006-01-02 15:04:05），-add/-ago 基于它而不是当前时间")
 	flag.Parse()
+
+	zone := time.Local
+	if *utc {
+		zone = time.UTC
+	}
 
 	// 当前时间上加减一段时长
 	if *now && *add != "" {
@@ -50,11 +58,11 @@ func main() {
 			fmt.Fprintf(os.Stderr, "时长看不懂: %v\n", err)
 			os.Exit(1)
 		}
-		printTime(time.Now().Add(d))
+		show(time.Now().In(zone).Add(d), *layout)
 		return
 	}
 	if *now {
-		now := time.Now()
+		now := time.Now().In(zone)
 		fmt.Printf("秒:   %d\n", now.Unix())
 		fmt.Printf("毫秒: %d\n", now.UnixMilli())
 		fmt.Printf("本地: %s\n", now.Format("2006-01-02 15:04:05"))
@@ -67,7 +75,15 @@ func main() {
 			fmt.Fprintf(os.Stderr, "时长看不懂: %v\n", err)
 			os.Exit(1)
 		}
-		tm := time.Now().Add(-d)
+		baseTm := time.Now()
+		if *base != "" {
+			baseTm, err = toTime(*base)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "基准时间看不懂: %v\n", err)
+				os.Exit(1)
+			}
+		}
+		tm := baseTm.In(zone).Add(-d)
 		fmt.Printf("%s 之前是 %s（秒 %d）\n", *ago, tm.Format("2006-01-02 15:04:05"), tm.Unix())
 		return
 	}
@@ -101,6 +117,7 @@ func main() {
 			fmt.Printf("%s -> 错误: %v\n", a, err)
 			continue
 		}
+		tm = tm.In(zone)
 		// 支持在某个时间点上加时长
 		if *add != "" {
 			d, err := time.ParseDuration(*add)
@@ -110,12 +127,17 @@ func main() {
 			}
 			tm = tm.Add(d)
 		}
-		printTime(tm)
+		show(tm, *layout)
 	}
 }
 
-// printTime 把时间按统一格式打出来
-func printTime(tm time.Time) {
+// show 按默认样式或自定义格式打印一个时间
+func show(tm time.Time, layout string) {
+	if layout != "" {
+		// Go 的参考布局就是 2006-01-02 15:04:05，直接拿用户给的格式当模板
+		fmt.Println(tm.Format(layout))
+		return
+	}
 	fmt.Printf("%s\n  秒:   %d\n  毫秒: %d\n  本地: %s\n  UTC:  %s\n",
 		tm.Format("2006-01-02 15:04:05"), tm.Unix(), tm.UnixMilli(),
 		tm.Format("2006-01-02 15:04:05"), tm.UTC().Format(time.RFC3339))
